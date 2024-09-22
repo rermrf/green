@@ -1,6 +1,6 @@
 //go:build wireinject
 
-package main
+package startup
 
 import (
 	"github.com/gin-gonic/gin"
@@ -14,17 +14,13 @@ import (
 
 func InitWebServer() *gin.Engine {
 	wire.Build(
+		InitDB,
+		dao.NewUserDao,
+		repository.NewCachedUserRepository,
+		service.NewUserService,
+		handler.NewUserHandler,
 		ioc.InitGin,
 		ioc.InitMiddlewares,
-		ioc.InitDB,
-
-		dao.NewUserDao,
-
-		repository.NewCachedUserRepository,
-
-		service.NewUserService,
-
-		handler.NewUserHandler,
 	)
 	return new(gin.Engine)
 }
