@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	regexp "github.com/dlclark/regexp2"
 	"green/internal/domain"
 	"green/internal/service"
@@ -36,6 +37,18 @@ func (h *UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug.POST("/signup", h.Signup)
 }
 
+func (h *UserHandler) Login(ctx *gin.Context) {
+	type LoginRequest struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	var req LoginRequest
+	if err := ctx.ShouldBind(&req); err != nil {
+		ctx.Error(errors.New("参数格式错误"))
+		return
+	}
+}
+
 func (h *UserHandler) Signup(ctx *gin.Context) {
 	type SignUpRequest struct {
 		Email           string `json:"email"`
@@ -44,24 +57,25 @@ func (h *UserHandler) Signup(ctx *gin.Context) {
 	}
 	var req SignUpRequest
 	if err := ctx.ShouldBind(&req); err != nil {
-		ctx.JSON(http.StatusOK, Result[string]{Code: 4, Msg: "参数格式错误"})
+		ctx.Error(errors.New("参数格式错误"))
+		return
 	}
 	ok, err := h.emailExp.MatchString(req.Email)
 	if err != nil {
 		// 邮箱匹配错误
-		ctx.JSON(http.StatusOK, Result[string]{Code: 5, Msg: "系统错误"})
+		ctx.Error(errors.New("系统错误"))
 		return
 	}
 
 	if !ok {
 		// 邮箱格式不正确
-		ctx.JSON(http.StatusOK, Result[string]{Code: 4, Msg: "邮箱格式不正确"})
+		ctx.Error(errors.New("邮箱格式不正确"))
 		return
 	}
 
 	if req.Password != req.ConfirmPassword {
 		// 两次密码不一致
-		ctx.JSON(http.StatusOK, Result[string]{Code: 4, Msg: "两次密码不一致"})
+		ctx.Error(errors.New("两次密码不一致"))
 		return
 	}
 
@@ -69,25 +83,25 @@ func (h *UserHandler) Signup(ctx *gin.Context) {
 	if err != nil {
 		// TODO: 记录日志
 		// 密码匹配错误
-		ctx.JSON(http.StatusOK, Result[string]{Code: 5, Msg: "系统错误"})
+		ctx.Error(errors.New("系统错误"))
 		return
 	}
 
 	if !ok {
 		// 密码格式不正确
-		ctx.JSON(http.StatusOK, Result[string]{Code: 4, Msg: "密码格式不正确"})
+		ctx.Error(errors.New("密码格式不正确"))
 		return
 	}
 	err = h.svc.Signup(ctx, domain.User{
 		Email:    req.Email,
 		Password: req.Password,
 	})
-	if err == service.ErrUserDuplicate {
-		ctx.JSON(http.StatusOK, Result[string]{Code: 4, Msg: "邮箱已经注册"})
+	if errors.Is(err, service.ErrUserDuplicate) {
+		ctx.Error(errors.New("邮箱已经注册"))
 		return
 	}
 	if err != nil {
-		ctx.JSON(http.StatusOK, Result[string]{Code: 5, Msg: "系统错误"})
+		ctx.Error(errors.New("系统错误"))
 		return
 	}
 	ctx.JSON(http.StatusOK, Result[string]{Msg: "注册成功"})

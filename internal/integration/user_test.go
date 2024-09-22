@@ -121,6 +121,19 @@ func (s *UserTestSuite) TestSignup() {
 	}
 }
 
+func (s *UserTestSuite) TestLogin() {
+	testCases := []struct {
+		name string
+	}{
+		{},
+	}
+	for _, tc := range testCases {
+		s.T().Run(tc.name, func(t *testing.T) {
+
+		})
+	}
+}
+
 func TestUserTestSuite(t *testing.T) {
 	suite.Run(t, new(UserTestSuite))
 }

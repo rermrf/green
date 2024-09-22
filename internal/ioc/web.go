@@ -2,6 +2,7 @@ package ioc
 
 import (
 	"green/internal/handler"
+	"green/internal/handler/middwares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,5 +15,7 @@ func InitGin(mdls []gin.HandlerFunc, userHdl *handler.UserHandler) *gin.Engine {
 }
 
 func InitMiddlewares() []gin.HandlerFunc {
-	return []gin.HandlerFunc{}
+	return []gin.HandlerFunc{
+		middwares.ErrorHandlingMiddleware(),
+	}
 }
